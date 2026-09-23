@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3efdf">
+  <meta name="description" content="Интерактивная игра для подготовки школьников 8–11 классов к встрече с лидером.">
+  <title>100 вопросов лидеру — игра</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@600;700&display=swap');
+    :root{--ink:#171713;--paper:#f3efdf;--white:#fffdf7;--blue:#3155d9;--blue-dark:#183694;--acid:#d9f36a;--orange:#ff7247;--muted:#6d6b61;--line:#c9c4b3;--shadow:6px 6px 0 var(--ink)}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,Arial,sans-serif;min-height:100vh;background-image:radial-gradient(#b8b3a5 0.7px,transparent 0.7px);background-size:15px 15px}
+    button,input,textarea{font:inherit}
+    button{color:inherit}
+    button,a{-webkit-tap-highlight-color:transparent}
+    button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+    .app{width:min(1440px,100%);min-height:100vh;margin:auto;background:var(--paper);border-inline:1px solid var(--ink)}
+    .topbar{min-height:78px;border-bottom:2px solid var(--ink);display:grid;grid-template-columns:330px 1fr auto;align-items:center;padding:0 28px;gap:24px;background:rgba(243,239,223,.96);position:sticky;top:0;z-index:20}
+    .brand{display:flex;align-items:center;gap:12px;font-family:Unbounded,sans-serif;font-weight:700;font-size:13px;line-height:1.1;text-transform:uppercase}
+    .brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:var(--blue);color:#fff;font-size:16px;transform:rotate(-8deg)}
+    .top-progress{height:10px;border:1.5px solid var(--ink);background:#fff;position:relative;overflow:hidden}
+    .top-progress span{display:block;height:100%;width:0;background:var(--acid);border-right:1.5px solid var(--ink);transition:width .45s ease}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .privacy{font-size:11px;color:var(--muted);white-space:nowrap}
+    .icon-button{border:1.5px solid var(--ink);background:var(--white);min-height:39px;padding:0 14px;font-weight:800;font-size:12px;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+    .icon-button:hover{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+    .layout{display:grid;grid-template-columns:330px minmax(0,1fr);min-height:calc(100vh - 78px)}
+    .sidebar{border-right:2px solid var(--ink);padding:31px 24px;display:flex;flex-direction:column;background:#e9e4d2}
+    .eyebrow{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:var(--blue)}
+    .route-title{font-family:Unbounded,sans-serif;font-size:18px;margin:10px 0 27px;line-height:1.35}
+    .route{display:grid;gap:6px;position:relative}
+    .route:before{content:"";position:absolute;left:20px;top:24px;bottom:24px;border-left:2px dashed #aaa492}
+    .route-step{position:relative;width:100%;border:0;background:transparent;padding:7px 5px;display:grid;grid-template-columns:42px 1fr;gap:12px;text-align:left;align-items:center;cursor:default}
+    .route-step.available{cursor:pointer}
+    .route-dot{width:40px;height:40px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--paper);font-family:Unbounded,sans-serif;font-size:11px;z-index:1}
+    .route-step.active .route-dot{background:var(--blue);color:#fff;box-shadow:3px 3px 0 var(--ink)}
+    .route-step.done .route-dot{background:var(--acid)}
+    .route-copy strong{font-size:13px;display:block}.route-copy span{font-size:10px;color:var(--muted)}
+    .route-step:not(.active):not(.done) .route-copy{opacity:.5}
+    .bank{margin-top:auto;border:1.5px solid var(--ink);background:var(--white);padding:17px;box-shadow:4px 4px 0 #b9b4a2}
+    .bank-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+    .bank-count{background:var(--orange);color:#fff;border-radius:50%;min-width:25px;height:25px;display:grid;place-items:center}
+    .bank p{font-size:11px;line-height:1.55;color:var(--muted);margin:11px 0 0}
+    .main{padding:clamp(30px,5vw,76px);overflow:hidden;position:relative}
+    .screen{display:none;animation:appear .35s ease both;max-width:930px;margin:0 auto}
+    .screen.active{display:block}
+    @keyframes appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    .step-head{display:flex;justify-content:space-between;gap:24px;align-items:start;margin-bottom:34px}
+    h1,h2,h3,p{margin-top:0}
+    h1,h2,h3{font-family:Unbounded,sans-serif}
+    h1{font-size:clamp(42px,6vw,86px);line-height:.94;letter-spacing:-.06em;margin:20px 0 28px;max-width:850px}
+    h1 span{color:var(--blue);display:inline-block;transform:rotate(-2deg)}
+    h2{font-size:clamp(30px,4vw,54px);line-height:1.05;letter-spacing:-.05em;margin:10px 0 0;max-width:720px}
+    h3{font-size:17px;line-height:1.35}
+    .step-no{flex:none;font:700 13px Unbounded,sans-serif;background:var(--acid);border:1.5px solid var(--ink);padding:11px 13px;box-shadow:3px 3px 0 var(--ink);transform:rotate(3deg)}
+    .lead{font-size:16px;line-height:1.75;max-width:720px;color:#4e4c45}
+    .hero-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:34px;align-items:end}
+    .hero-card{background:var(--blue);color:#fff;border:2px solid var(--ink);min-height:350px;padding:35px;box-shadow:10px 10px 0 var(--ink);position:relative;overflow:hidden}
+    .hero-card:after{content:"?";position:absolute;right:-26px;bottom:-95px;font:700 340px/1 Unbounded,sans-serif;color:#ffffff12;transform:rotate(8deg)}
+    .hero-card p{max-width:570px;color:#e8ecff;line-height:1.7;position:relative;z-index:1}
+    .hero-card .mini-route{font-weight:800;font-size:12px;color:var(--acid);letter-spacing:.04em;position:relative;z-index:1}
+    .hero-card h1{position:relative;z-index:1}.hero-card h1 span{color:var(--acid)}
+    .facts{display:grid;gap:12px}
+    .fact{border-top:2px solid var(--ink);padding:15px 0 3px;display:flex;justify-content:space-between;gap:15px;align-items:baseline}
+    .fact b{font:700 30px Unbounded,sans-serif;color:var(--blue)}.fact span{font-size:11px;text-align:right;max-width:145px}
+    .button{border:1.5px solid var(--ink);background:var(--acid);min-height:52px;padding:0 23px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:12px;text-decoration:none}
+    .button:hover:not(:disabled){transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+    .button.blue{background:var(--blue);color:#fff}.button.white{background:var(--white)}.button.orange{background:var(--orange);color:#fff}
+    .button:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;position:relative;z-index:2}
+    .panel{border:1.5px solid var(--ink);background:var(--white);padding:26px;box-shadow:5px 5px 0 #bcb6a4;margin-top:22px}
+    .panel-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin-bottom:15px;display:block}
+    .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .choice{border:1.5px solid var(--ink);background:var(--white);padding:19px;text-align:left;cursor:pointer;min-height:92px;transition:background .15s,transform .15s}
+    .choice:hover{transform:translateY(-2px)}.choice.selected{background:var(--acid);box-shadow:3px 3px 0 var(--ink)}
+    .choice b{display:block;font-size:14px;margin-bottom:7px}.choice span{font-size:11px;line-height:1.5;color:var(--muted)}
+    .scale{display:flex;gap:8px;flex-wrap:wrap}
+    .scale button{width:48px;height:48px;border:1.5px solid var(--ink);background:var(--paper);font-weight:800;cursor:pointer}
+    .scale button.selected{background:var(--orange);color:#fff;box-shadow:3px 3px 0 var(--ink)}
+    .scale-legend{display:flex;justify-content:space-between;max-width:272px;margin-top:8px;color:var(--muted);font-size:9px}
+    .survey-line{padding-top:20px;margin-top:20px;border-top:1px solid var(--line)}
+    .survey-line h3{font-family:Manrope,sans-serif;font-size:13px;margin-bottom:13px}
+    .footer-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:30px}
+    .microcopy{font-size:10px;color:var(--muted);max-width:370px;line-height:1.6}
+    .card-table{background:#d9d3bf;border:2px solid var(--ink);padding:clamp(18px,4vw,38px);position:relative}
+    .question-card{min-height:285px;background:var(--blue);color:#fff;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:28px;display:flex;flex-direction:column;justify-content:space-between;transform:rotate(-1deg);position:relative;overflow:hidden}
+    .question-card:after{content:"";position:absolute;width:150px;height:150px;border:28px solid var(--acid);border-radius:50%;right:-76px;bottom:-75px}
+    .card-top{display:flex;justify-content:space-between;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--acid)}
+    .question-card blockquote{font:600 clamp(21px,3vw,33px)/1.35 Unbounded,sans-serif;margin:25px 0;max-width:720px;position:relative;z-index:1}
+    .draw-button{align-self:flex-start;border:1px solid #fff;background:transparent;color:#fff;padding:9px 13px;font-weight:800;font-size:10px;cursor:pointer;position:relative;z-index:2}
+    textarea{width:100%;min-height:105px;resize:vertical;border:1.5px solid var(--ink);background:#fff;padding:16px;line-height:1.55}
+    .hint{font-size:11px;line-height:1.55;color:var(--muted);margin:10px 0 0}.hint.good{color:#1d6b41;font-weight:700}.hint.warn{color:#a74225;font-weight:700}
+    .dialogue-grid{display:grid;grid-template-columns:1fr 290px;gap:22px;align-items:start}
+    .speech{background:var(--blue);color:#fff;border:2px solid var(--ink);padding:29px;box-shadow:6px 6px 0 var(--ink);position:relative;margin-bottom:25px}
+    .speech:after{content:"";position:absolute;left:35px;bottom:-18px;border-width:18px 18px 0 0;border-style:solid;border-color:var(--ink) transparent transparent transparent}
+    .speech p{font:600 21px/1.5 Unbounded,sans-serif;margin:0}
+    .timer{border:1.5px solid var(--ink);background:var(--acid);padding:24px;text-align:center;position:sticky;top:108px}
+    .timer-time{font:700 44px Unbounded,sans-serif;margin:7px 0 13px}.timer p{font-size:10px;line-height:1.5;color:#555344}
+    .timer button{width:100%;border:1.5px solid var(--ink);background:var(--white);min-height:41px;font-weight:800;cursor:pointer}
+    .follow-ups{display:flex;flex-wrap:wrap;gap:9px}.chip{border:1.5px solid var(--ink);border-radius:999px;background:var(--white);padding:10px 15px;font-size:11px;font-weight:800;cursor:pointer}.chip.selected{background:var(--orange);color:#fff}
+    .reaction-row{display:flex;gap:12px;flex-wrap:wrap}.reaction{width:104px;min-height:92px;border:1.5px solid var(--ink);background:var(--white);cursor:pointer;font-weight:800;font-size:11px}.reaction i{display:block;font-style:normal;font-size:27px;margin-bottom:5px}.reaction.selected{background:var(--acid);box-shadow:3px 3px 0 var(--ink)}
+    .action-list{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.action-card{border:1.5px solid var(--ink);background:var(--white);padding:20px;text-align:left;cursor:pointer;min-height:145px}.action-card.selected{background:var(--acid);box-shadow:4px 4px 0 var(--ink)}.action-card b{font-family:Unbounded,sans-serif;font-size:13px;display:block;margin:13px 0 8px}.action-card span{font-size:10px;line-height:1.5;color:var(--muted)}
+    .success{background:var(--blue);color:#fff;border:2px solid var(--ink);box-shadow:9px 9px 0 var(--ink);padding:clamp(28px,5vw,52px);position:relative;overflow:hidden}.success:before{content:"100";position:absolute;right:-30px;top:-35px;font:700 130px Unbounded,sans-serif;color:#ffffff0f}.success h2{color:var(--acid)}.success .lead{color:#e2e7ff}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#ffffff55;border:1px solid #ffffff55;margin:28px 0}.summary div{background:var(--blue-dark);padding:18px}.summary span{display:block;color:#aebbed;font-size:9px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}.summary b{font-size:12px;line-height:1.5}
+    .overlay{position:fixed;inset:0;background:#171713b8;z-index:50;display:none;align-items:stretch;justify-content:flex-end}.overlay.open{display:flex}.drawer{width:min(570px,100%);background:var(--paper);border-left:2px solid var(--ink);padding:30px;overflow-y:auto;animation:slide .25s ease}@keyframes slide{from{transform:translateX(100%)}to{transform:none}}.drawer-head{display:flex;justify-content:space-between;gap:20px;align-items:start;border-bottom:2px solid var(--ink);padding-bottom:20px}.drawer h2{font-size:28px}.close{width:42px;height:42px;border:1.5px solid var(--ink);background:var(--white);font-size:20px;cursor:pointer}.observe-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.observe{border:1px solid var(--ink);background:var(--white);padding:10px 4px;text-align:center;cursor:pointer}.observe b{display:block;font-size:19px}.observe span{font-size:8px}.check-list label{display:flex;gap:10px;align-items:start;font-size:12px;line-height:1.5;margin:11px 0}.focus-prompts{font-size:12px;line-height:1.7;padding-left:19px}.data-note{background:#e3dec9;border-left:4px solid var(--blue);padding:13px;font-size:10px;line-height:1.6}
+    .toast{position:fixed;right:24px;bottom:24px;background:var(--ink);color:#fff;padding:13px 17px;font-size:11px;font-weight:800;z-index:100;transform:translateY(100px);transition:transform .25s}.toast.show{transform:none}
+    @media(max-width:900px){.topbar{grid-template-columns:1fr auto}.top-progress,.privacy{display:none}.layout{grid-template-columns:1fr}.sidebar{border:0;border-bottom:2px solid var(--ink);padding:13px 18px}.sidebar>.eyebrow,.route-title,.bank{display:none}.route{grid-template-columns:repeat(5,1fr);gap:3px}.route:before{left:8%;right:8%;top:20px;bottom:auto;border-left:0;border-top:2px dashed #aaa492}.route-step{display:flex;justify-content:center;padding:1px}.route-copy{display:none}.route-dot{width:38px;height:38px;background:var(--paper)}.main{padding:38px 22px 60px}.hero-grid{grid-template-columns:1fr}.facts{grid-template-columns:repeat(3,1fr)}.fact{display:block}.fact span{display:block;text-align:left;margin-top:5px}.dialogue-grid{grid-template-columns:1fr}.timer{position:static}.action-list{grid-template-columns:1fr}}
+    @media(max-width:580px){.app{border:0}.topbar{min-height:66px;padding:0 15px}.brand{font-size:10px}.brand-mark{width:36px;height:36px}.icon-button{font-size:0;width:40px;padding:0}.icon-button:after{content:"≡";font-size:18px}.main{padding-inline:16px}.hero-card{padding:25px;min-height:390px}.hero-card h1{font-size:45px}.choices{grid-template-columns:1fr}.step-head{margin-bottom:24px}.step-no{font-size:10px}.panel{padding:19px}.footer-actions{align-items:stretch;flex-direction:column-reverse}.footer-actions .button{width:100%}.card-table{padding:13px}.question-card{padding:20px;min-height:320px}.question-card blockquote{font-size:20px}.summary{grid-template-columns:1fr}.observe-grid{grid-template-columns:repeat(5,1fr)}.drawer{padding:21px}.facts{grid-template-columns:1fr}.fact{display:flex}.fact span{text-align:right}.reaction-row{display:grid;grid-template-columns:repeat(2,1fr)}.reaction{width:auto}.button{width:100%}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">100</span><span>вопросов<br>лидеру</span></div>
+      <div class="top-progress" aria-label="Прогресс маршрута"><span id="progressBar"></span></div>
+      <div class="top-actions"><span class="privacy">Без имён · данные на устройстве</span><button class="icon-button" id="facilitatorButton" type="button">Для ведущего</button></div>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <span class="eyebrow">Игровой маршрут</span><h2 class="route-title">От любопытства<br>к действию</h2>
+        <nav class="route" aria-label="Этапы игры" id="routeNav">
+          <button class="route-step active" data-go="1" type="button"><span class="route-dot">01</span><span class="route-copy"><strong>Интерес</strong><span>Что цепляет?</span></span></button>
+          <button class="route-step" data-go="2" type="button"><span class="route-dot">02</span><span class="route-copy"><strong>Вопрос</strong><span>Что спросить?</span></span></button>
+          <button class="route-step" data-go="3" type="button"><span class="route-dot">03</span><span class="route-copy"><strong>Диалог</strong><span>Как услышать?</span></span></button>
+          <button class="route-step" data-go="4" type="button"><span class="route-dot">04</span><span class="route-copy"><strong>Рефлексия</strong><span>Что изменилось?</span></span></button>
+          <button class="route-step" data-go="5" type="button"><span class="route-dot">05</span><span class="route-copy"><strong>Следующий шаг</strong><span>Что сделаю?</span></span></button>
+        </nav>
+        <div class="bank"><div class="bank-head"><span>Копилка вопросов</span><span class="bank-count" id="bankCount">0</span></div><p id="bankPreview">Сформулируй свой вопрос на втором этапе.</p></div>
+      </aside>
+      <main class="main">
+        <section class="screen active" id="screen0">
+          <div class="hero-grid"><div class="hero-card"><span class="mini-route">ИНТЕРЕС → ВОПРОС → ДИАЛОГ → ДЕЙСТВИЕ</span><h1>Спроси.<br><span>Услышь.</span><br>Попробуй.</h1><p>Игра-подготовка к живой встрече. Выбери то, что действительно интересно, создай свой вопрос и преврати ответ в маленький реальный шаг.</p><div class="hero-actions"><button class="button" id="startButton" type="button">Начать игру <span>→</span></button></div></div><div class="facts"><div class="fact"><b>100</b><span>карточек для сильного вопроса</span></div><div class="fact"><b>5</b><span>коротких этапов маршрута</span></div><div class="fact"><b>12</b><span>минут до личного плана</span></div></div></div>
+        </section>
+
+        <section class="screen" id="screen1">
+          <div class="step-head"><div><span class="eyebrow">Разогрев · выбери честно</span><h2>Что тебе правда интересно?</h2></div><span class="step-no">01 / 05</span></div>
+          <p class="lead">Не ищи «правильную» тему. Выбери ту, про которую хотелось бы узнать не из учебника, а от человека с реальным опытом.</p>
+          <div class="choices" id="interestChoices">
+            <button class="choice" data-value="Путь к профессии" type="button"><b>Путь к профессии</b><span>Выбор, обучение и первые шаги</span></button>
+            <button class="choice" data-value="Ошибки и повороты" type="button"><b>Ошибки и повороты</b><span>Неудачи, сомнения и смена планов</span></button>
+            <button class="choice" data-value="Лидерство и команда" type="button"><b>Лидерство и команда</b><span>Люди, решения и ответственность</span></button>
+            <button class="choice" data-value="Идеи и результат" type="button"><b>Идеи и результат</b><span>Как замысел становится делом</span></button>
+            <button class="choice" data-value="Баланс и ценности" type="button"><b>Баланс и ценности</b><span>Смысл, энергия и личные ориентиры</span></button>
+            <button class="choice" data-value="Пока не знаю" type="button"><b>Пока не знаю</b><span>Карточка поможет найти зацепку</span></button>
+          </div>
+          <div class="panel"><span class="panel-label">Анонимный замер до встречи</span><h3>Насколько тебе сейчас интересно услышать опыт гостя?</h3><div class="scale" id="preScale" aria-label="Интерес от 1 до 5"></div><div class="scale-legend"><span>совсем не интересно</span><span>очень интересно</span></div><div class="survey-line"><h3>Насколько легко тебе сформулировать собственный вопрос?</h3><div class="scale" id="preQuestionScale" aria-label="Готовность сформулировать вопрос от 1 до 5"></div><div class="scale-legend"><span>пока трудно</span><span>легко</span></div></div><div class="survey-line"><h3>Ты уже участвовал(а) во встречах с приглашённым гостем?</h3><div class="follow-ups" id="experienceChoices"><button class="chip" type="button">Да, задавал(а) вопрос</button><button class="chip" type="button">Да, только слушал(а)</button><button class="chip" type="button">Нет / не помню</button></div></div></div>
+          <div class="footer-actions"><span class="microcopy">Ответы не содержат имени и сохраняются только в этом браузере до выгрузки ведущим.</span><button class="button blue" id="toQuestion" type="button" disabled>Собрать вопрос →</button></div>
+        </section>
+
+        <section class="screen" id="screen2">
+          <div class="step-head"><div><span class="eyebrow">В колоде · 100 стартов</span><h2>Преврати интерес в вопрос</h2></div><span class="step-no">02 / 05</span></div>
+          <div class="card-table"><article class="question-card"><div class="card-top"><span id="cardTheme">Тема</span><span id="cardNumber">Карта 001 / 100</span></div><blockquote id="cardText">Какой выбор сильнее всего повлиял на ваш профессиональный путь?</blockquote><button class="draw-button" id="drawButton" type="button">↻ Другая карточка</button></article></div>
+          <div class="panel"><label class="panel-label" for="questionInput">Сделай вопрос своим</label><textarea id="questionInput" maxlength="240" placeholder="Например: Как вы поняли, что хотите заниматься именно этим?"></textarea><p class="hint" id="questionHint">Сильный вопрос начинается с «как», «почему», «что помогло» и просит привести пример.</p></div>
+          <div class="footer-actions"><button class="button white" id="useCard" type="button">Взять текст карточки</button><button class="button blue" id="saveQuestion" type="button" disabled>Отправить ведущему →</button></div>
+        </section>
+
+        <section class="screen" id="screen3">
+          <div class="step-head"><div><span class="eyebrow">Не интервью · разговор</span><h2>Задай и услышь</h2></div><span class="step-no">03 / 05</span></div>
+          <div class="dialogue-grid"><div><div class="speech"><p id="dialogueQuestion">Твой вопрос появится здесь.</p></div><div class="panel"><span class="panel-label">Как ты включишься в диалог?</span><div class="choices" id="dialogueMode"><button class="choice" data-value="Задам сам" type="button"><b>Задам сам</b><span>Можно прочитать с экрана</span></button><button class="choice" data-value="Спрошу вместе с другом" type="button"><b>Вместе с другом</b><span>Один начинает, другой уточняет</span></button><button class="choice" data-value="Передам ведущему" type="button"><b>Передам ведущему</b><span>Это тоже полноценное участие</span></button><button class="choice" data-value="Сначала послушаю" type="button"><b>Сначала послушаю</b><span>Включусь, когда найду зацепку</span></button></div></div></div><aside class="timer"><span class="panel-label">Тренировка</span><div class="timer-time" id="timer">01:30</div><p>Произнеси вопрос и потренируйся слушать ответ без спешки.</p><button id="timerButton" type="button">Запустить 90 секунд</button></aside></div>
+          <div class="panel"><span class="panel-label">Выбери одно живое уточнение</span><div class="follow-ups" id="followUps"><button class="chip" type="button">Можете привести пример?</button><button class="chip" type="button">Что было самым трудным?</button><button class="chip" type="button">Что вы тогда чувствовали?</button><button class="chip" type="button">Что бы вы изменили?</button></div></div>
+          <div class="footer-actions"><span class="microcopy">Если говорить вслух некомфортно, вопрос можно передать. Главное — сохранить своё авторство.</span><button class="button blue" id="toReflection" type="button" disabled>Ответ услышан →</button></div>
+        </section>
+
+        <section class="screen" id="screen4">
+          <div class="step-head"><div><span class="eyebrow">Поймай свою реакцию</span><h2>Что осталось после ответа?</h2></div><span class="step-no">04 / 05</span></div>
+          <p class="lead">Рефлексия — не пересказ. Отметь, что произошло именно с твоим мнением.</p>
+          <div class="reaction-row" id="reactions"><button class="reaction" data-value="Удивило" type="button"><i>!</i>Удивило</button><button class="reaction" data-value="Подтвердило" type="button"><i>✓</i>Подтвердило</button><button class="reaction" data-value="Не согласен" type="button"><i>≠</i>Не согласен</button><button class="reaction" data-value="Хочу узнать" type="button"><i>?</i>Хочу узнать</button></div>
+          <div class="panel"><label class="panel-label" for="reflectionInput">Одна мысль, которую забираешь</label><textarea id="reflectionInput" maxlength="300" placeholder="Я понял(а), что... / Меня удивило, что..."></textarea><p class="hint">Достаточно одного предложения. Здесь нет оценки и правильного ответа.</p></div>
+          <div class="footer-actions"><span class="microcopy">Не указывай имена, школу, контакты и другие личные сведения.</span><button class="button blue" id="toAction" type="button" disabled>Выбрать шаг →</button></div>
+        </section>
+
+        <section class="screen" id="screen5">
+          <div class="step-head"><div><span class="eyebrow">Маленький · конкретный · твой</span><h2>Что ты попробуешь за 7 дней?</h2></div><span class="step-no">05 / 05</span></div>
+          <div class="action-list" id="actionChoices"><button class="action-card" data-value="Найду 3 факта о профессии" type="button"><span>01 / ИССЛЕДОВАТЬ</span><b>Найду 3 факта</b><span>Проверю требования, задачи и путь входа</span></button><button class="action-card" data-value="Задам вопрос специалисту" type="button"><span>02 / СПРОСИТЬ</span><b>Найду человека</b><span>Задам один конкретный вопрос о его работе</span></button><button class="action-card" data-value="Попробую мини-задачу" type="button"><span>03 / СДЕЛАТЬ</span><b>Попробую руками</b><span>Выполню небольшую задачу из этой сферы</span></button></div>
+          <div class="panel"><label class="panel-label" for="actionInput">Уточни шаг своими словами</label><textarea id="actionInput" maxlength="240" placeholder="Например: до пятницы посмотрю два видео о работе архитектора и выпишу вопросы"></textarea></div>
+          <div class="panel"><span class="panel-label">Анонимный замер после встречи</span><h3>Насколько ты готов(а) сделать этот шаг?</h3><div class="scale" id="postScale" aria-label="Готовность от 1 до 5"></div><div class="scale-legend"><span>пока не готов(а)</span><span>точно попробую</span></div><div class="survey-line"><h3>Какой этап оказался для тебя самым полезным?</h3><div class="follow-ups" id="usefulChoices"><button class="chip" type="button">Интерес</button><button class="chip" type="button">Вопрос</button><button class="chip" type="button">Диалог</button><button class="chip" type="button">Рефлексия</button><button class="chip" type="button">Следующий шаг</button></div></div><div class="survey-line"><h3>На каком этапе было сложнее всего оставаться включённым?</h3><div class="follow-ups" id="dropChoices"><button class="chip" type="button">Интерес</button><button class="chip" type="button">Вопрос</button><button class="chip" type="button">Диалог</button><button class="chip" type="button">Рефлексия</button><button class="chip" type="button">Следующий шаг</button><button class="chip" type="button">Такого не было</button></div></div></div>
+          <div class="footer-actions"><span class="microcopy">Шаг принадлежит тебе: его можно изменить, уменьшить или обсудить со взрослым, которому доверяешь.</span><button class="button orange" id="finishButton" type="button" disabled>Зафиксировать маршрут</button></div>
+        </section>
+
+        <section class="screen" id="screen6">
+          <div class="success"><span class="eyebrow" style="color:var(--acid)">Маршрут пройден</span><h2>Один вопрос уже стал действием.</h2><p class="lead">Не нужно выбрать профессию за одну встречу. Достаточно услышать опыт, проверить свой интерес и сделать следующий небольшой шаг.</p><div class="summary"><div><span>Мой интерес</span><b id="sumInterest"></b></div><div><span>Мой вопрос</span><b id="sumQuestion"></b></div><div><span>Следующий шаг</span><b id="sumAction"></b></div></div><div class="hero-actions"><button class="button" id="copySummary" type="button">Скопировать мой план</button><button class="button white" id="restartButton" type="button">Пройти ещё раз</button></div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="overlay" id="facilitatorOverlay" role="dialog" aria-modal="true" aria-labelledby="facilitatorTitle">
+    <aside class="drawer"><div class="drawer-head"><div><span class="eyebrow">Инструменты проекта</span><h2 id="facilitatorTitle">Лист ведущего</h2></div><button class="close" id="closeDrawer" type="button" aria-label="Закрыть">×</button></div>
+      <div class="panel"><span class="panel-label">Быстрый срез активности</span><p class="hint">Сколько участников активно включены сейчас? Нажимайте + по ходу встречи.</p><div class="observe-grid" id="observeGrid"><button class="observe" data-stage="interest" type="button"><b>0</b><span>интерес</span></button><button class="observe" data-stage="question" type="button"><b>0</b><span>вопрос</span></button><button class="observe" data-stage="dialogue" type="button"><b>0</b><span>диалог</span></button><button class="observe" data-stage="reflection" type="button"><b>0</b><span>рефлексия</span></button><button class="observe" data-stage="action" type="button"><b>0</b><span>шаг</span></button></div></div>
+      <div class="panel check-list"><span class="panel-label">Наблюдение без оценивания личности</span><label><input type="checkbox" data-observe="ownQuestions"> Участники формулируют собственные, а не только выбирают готовые вопросы</label><label><input type="checkbox" data-observe="followUps"> Появляются уточнения к ответу гостя</label><label><input type="checkbox" data-observe="peerSupport"> Участники помогают друг другу включиться</label><label><input type="checkbox" data-observe="drop"> На одном из этапов заметно снижается активность</label><textarea id="facilitatorNote" maxlength="500" placeholder="Краткое наблюдение без имён и описания личных ситуаций"></textarea></div>
+      <div class="panel"><span class="panel-label">Мини-интервью после игры</span><ol class="focus-prompts"><li>В какой момент стало по-настоящему интересно?</li><li>Что помогло или помешало задать свой вопрос?</li><li>На каком этапе хотелось перестать участвовать?</li><li>Какой следующий шаг кажется реальным?</li></ol></div>
+      <p class="data-note"><b>Минимизация данных.</b> Имена, контакты, школа, класс и чувствительные сведения не запрашиваются. Записи остаются в браузере до выгрузки или очистки. Перед использованием команда проекта должна определить срок хранения и доступ к выгрузкам.</p>
+      <div class="hero-actions"><button class="button blue" id="exportButton" type="button">Выгрузить JSON</button><button class="button white" id="clearButton" type="button">Очистить данные</button></div>
+    </aside>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const themes = [
+      {name:'Путь к профессии', questions:['Как вы поняли, чем хотите заниматься?','Какой первый шаг оказался важнее всего?','Что в начале пути вы представляли совсем иначе?','Как вы выбирали между несколькими интересами?','Какой навык пригодился вам неожиданно?','Кто помог вам увидеть свои сильные стороны?','Что вы посоветовали бы попробовать ещё в школе?','Как менялись ваши профессиональные цели?','Как вы поняли, что выбор подходит именно вам?','Какой опыт оказался полезнее диплома?','Что помогло решиться на первый серьёзный шаг?','Как вы находили возможности без опыта?','Как выглядел ваш обычный день в начале пути?','Что оказалось самым трудным в обучении?','Как вы выбирали людей, у которых хотели учиться?','Какой миф о вашей профессии вас удивляет?','Что важно узнать о профессии до выбора?','Как вы поняли, что выросли как специалист?','Какой совет о карьере вам не пригодился?','Если бы вы начинали сейчас, что сделали бы первым?']},
+      {name:'Ошибки и повороты', questions:['Какая ошибка научила вас большему, чем успех?','Как вы действуете, когда план не срабатывает?','Когда вам пришлось полностью изменить решение?','Как вы отличаете ошибку от полезного эксперимента?','Что помогает не сдаться после неудачи?','Какой риск в итоге оказался оправданным?','О каком провале вы теперь вспоминаете с благодарностью?','Как вы просите помощь в сложной ситуации?','Что помогает признать, что вы были неправы?','Как вы возвращаете уверенность после ошибки?','Какой трудный выбор изменил ваш путь?','Когда отказ от цели был правильным решением?','Как вы реагируете на критику?','Что вы делаете, если боитесь начать?','Какую ошибку чаще всего совершают новички?','Кто поддержал вас в самый сложный момент?','Как вы понимаете, что пора сменить направление?','Какой урок вы долго не хотели принимать?','Что помогает принимать решение при нехватке информации?','Что бы вы сказали себе в момент главной неудачи?']},
+      {name:'Лидерство и команда', questions:['Что для вас значит быть лидером без должности?','Как вы принимаете непопулярные решения?','Как понять, кому можно доверить важную задачу?','Что вы делаете, когда команда не согласна с вами?','Как вы даёте обратную связь человеку?','Какую роль в команде вам труднее всего выполнять?','Как вы замечаете тихих участников команды?','Что важнее лидеру: уверенность или сомнение?','Как вы признаёте ошибку перед командой?','Как договориться с человеком других взглядов?','Что помогает команде пережить конфликт?','Как вы поддерживаете инициативу других?','Как понять, что пора передать ответственность?','Какой руководитель сильнее всего повлиял на вас?','Что разрушает доверие в команде?','Как вы находите баланс между результатом и людьми?','Когда лидеру нужно отступить в сторону?','Как вы объясняете сложное решение?','Какой вопрос вы чаще всего задаёте команде?','Чему вы научились у самого младшего коллеги?']},
+      {name:'Идеи и результат', questions:['Как вы проверяете, что идея действительно нужна?','Как превратить большой замысел в первый шаг?','Откуда обычно приходят ваши лучшие идеи?','Как вы выбираете одну идею из десяти?','Что помогает доводить начатое до конца?','Как вы понимаете, что результат достаточно хорош?','Что делать, если идею никто не поддерживает?','Как вы находите ресурсы для первого проекта?','Какой ваш проект начинался совсем иначе?','Как вы проверяете идею с минимальным риском?','Что важнее в начале: план или действие?','Как вы справляетесь со скучной частью проекта?','Когда стоит показать незавершённую работу?','Как вы измеряете успех проекта?','Что вы делаете, когда теряете мотивацию?','Какой маленький проект дал большой результат?','Как вы находите людей для общей идеи?','Что помогает объяснить идею простыми словами?','Когда проект лучше остановить?','Какую идею вы хотели бы попробовать сейчас?']},
+      {name:'Баланс и ценности', questions:['Что помогает вам понимать, что действительно важно?','Как вы сохраняете время на жизнь вне работы?','От каких возможностей вы сознательно отказались?','Как ваши ценности влияют на решения?','Что даёт вам энергию в сложный период?','Как вы замечаете, что устали?','Что для вас означает успех сейчас?','Как изменилось ваше отношение к достижениям?','Как вы справляетесь с ожиданиями других?','Что помогает не сравнивать себя с людьми вокруг?','Как вы находите смысл в обычных задачах?','Какое правило вы разрешили себе нарушить?','Что вы делаете, чтобы услышать своё мнение?','Как вы выбираете между пользой и интересом?','Какой привычкой вы особенно дорожите?','Как вы восстанавливаетесь после напряжённого дня?','Что в работе делает вас счастливее?','Как вы защищаете время для близких?','Как понять, что цель навязана не вами?','Какой вопрос вы советуете чаще задавать себе?']}
+    ];
+    const allCards=themes.flatMap((theme,themeIndex)=>theme.questions.map((text,index)=>({theme:theme.name,text,number:themeIndex*20+index+1})));
+    const emptyState={stage:0,maxStage:0,interest:'',preInterest:0,preQuestion:0,previousExperience:'',question:'',dialogueMode:'',followUp:'',reaction:'',reflection:'',action:'',postReadiness:0,usefulStage:'',dropStage:'',startedAt:'',completedAt:''};
+    let storedState={};
+    try{storedState=JSON.parse(localStorage.getItem('leaderGameSession')||'{}')}catch{localStorage.removeItem('leaderGameSession')}
+    let state={...emptyState,...storedState};
+    let currentCard=allCards[0],timerId=null,timerSeconds=90;
+    const $=selector=>document.querySelector(selector);
+    const $$=selector=>[...document.querySelectorAll(selector)];
+
+    function save(){localStorage.setItem('leaderGameSession',JSON.stringify(state))}
+    function showToast(message){const toast=$('#toast');toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}
+    function makeScale(id,key){const wrap=$(id);for(let i=1;i<=5;i++){const button=document.createElement('button');button.type='button';button.textContent=i;button.setAttribute('aria-label',`${i} из 5`);button.addEventListener('click',()=>{state[key]=i;[...wrap.children].forEach((item,index)=>item.classList.toggle('selected',index<i));save();updateButtons()});wrap.append(button)}}
+    function selectGroup(container,selector,value){$$(container+' '+selector).forEach(button=>button.classList.toggle('selected',button.dataset.value===value||button.textContent.trim()===value))}
+    function go(stage){state.stage=stage;state.maxStage=Math.max(state.maxStage,stage);$$('.screen').forEach(screen=>screen.classList.remove('active'));$(`#screen${stage}`).classList.add('active');$$('.route-step').forEach((step,index)=>{const number=index+1;step.classList.toggle('active',number===stage);step.classList.toggle('done',number<stage||number<state.maxStage);step.classList.toggle('available',number<=state.maxStage);});$('#progressBar').style.width=`${Math.min(stage,5)*20}%`;window.scrollTo({top:0,behavior:'smooth'});save()}
+    function updateButtons(){
+      $('#toQuestion').disabled=!(state.interest&&state.preInterest&&state.preQuestion&&state.previousExperience);
+      $('#saveQuestion').disabled=$('#questionInput').value.trim().length<12;
+      $('#toReflection').disabled=!(state.dialogueMode&&state.followUp);
+      $('#toAction').disabled=!(state.reaction&&$('#reflectionInput').value.trim().length>=8);
+      $('#finishButton').disabled=!((state.action||$('#actionInput').value.trim().length>=8)&&state.postReadiness&&state.usefulStage&&state.dropStage);
+    }
+    function drawCard(){const pool=state.interest==='Пока не знаю'?allCards:allCards.filter(card=>card.theme===state.interest);let next=pool[Math.floor(Math.random()*pool.length)];if(pool.length>1)while(next===currentCard)next=pool[Math.floor(Math.random()*pool.length)];currentCard=next;$('#cardTheme').textContent=next.theme;$('#cardNumber').textContent=`Карта ${String(next.number).padStart(3,'0')} / 100`;$('#cardText').textContent=next.text}
+    function questionFeedback(text){const hint=$('#questionHint');hint.className='hint';if(text.trim().length<12){hint.textContent='Добавь конкретики: о каком выборе, случае или опыте ты хочешь узнать?';return}if(/^(вы|вам|у вас|можно ли|есть ли|считаете ли)/i.test(text.trim())){hint.classList.add('warn');hint.textContent='Попробуй начать с «как», «почему» или «что помогло», чтобы получить развёрнутый ответ.';return}hint.classList.add('good');hint.textContent='Хорошая основа: вопрос приглашает поделиться опытом, а не ответить «да» или «нет».'}
+    function resetTimer(){clearInterval(timerId);timerId=null;timerSeconds=90;$('#timer').textContent='01:30';$('#timerButton').textContent='Запустить 90 секунд'}
+    function startTimer(){if(timerId){resetTimer();return}$('#timerButton').textContent='Остановить';timerId=setInterval(()=>{timerSeconds--;$('#timer').textContent=`${String(Math.floor(timerSeconds/60)).padStart(2,'0')}:${String(timerSeconds%60).padStart(2,'0')}`;if(timerSeconds<=0){resetTimer();showToast('Тренировка завершена') }},1000)}
+
+    makeScale('#preScale','preInterest');makeScale('#preQuestionScale','preQuestion');makeScale('#postScale','postReadiness');
+    $('#startButton').addEventListener('click',()=>{state.startedAt=new Date().toISOString();go(1)});
+    $$('#interestChoices .choice').forEach(button=>button.addEventListener('click',()=>{state.interest=button.dataset.value;selectGroup('#interestChoices','.choice',state.interest);drawCard();updateButtons();save()}));
+    $$('#experienceChoices .chip').forEach(button=>button.addEventListener('click',()=>{state.previousExperience=button.textContent.trim();$$('#experienceChoices .chip').forEach(item=>item.classList.toggle('selected',item===button));updateButtons();save()}));
+    $('#toQuestion').addEventListener('click',()=>{drawCard();go(2)});
+    $('#drawButton').addEventListener('click',drawCard);
+    $('#useCard').addEventListener('click',()=>{$('#questionInput').value=currentCard.text;questionFeedback(currentCard.text);updateButtons()});
+    $('#questionInput').addEventListener('input',event=>{questionFeedback(event.target.value);updateButtons()});
+    $('#saveQuestion').addEventListener('click',async()=>{
+      const button=$('#saveQuestion');
+      const question=$('#questionInput').value.trim();
+      button.disabled=true;button.textContent='Отправляю…';
+      const apiBase=location.protocol==='file:'?'http://localhost:3000':'';
+      try{
+        const response=await fetch(`${apiBase}/api/questions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,interest:state.interest})});
+        const result=await response.json();
+        if(!response.ok)throw new Error(result.error||'Не удалось отправить вопрос.');
+        state.question=question;$('#dialogueQuestion').textContent=question;$('#bankCount').textContent='1';$('#bankPreview').textContent=question;showToast('Вопрос отправлен ведущему');go(3);
+      }catch(error){showToast(error.message||'Нет связи с ботом ведущего');button.disabled=false}
+      finally{button.textContent='Отправить ведущему →'}
+    });
+    $$('#dialogueMode .choice').forEach(button=>button.addEventListener('click',()=>{state.dialogueMode=button.dataset.value;selectGroup('#dialogueMode','.choice',state.dialogueMode);updateButtons();save()}));
+    $$('#followUps .chip').forEach(button=>button.addEventListener('click',()=>{state.followUp=button.textContent.trim();$$('#followUps .chip').forEach(item=>item.classList.toggle('selected',item===button));updateButtons();save()}));
+    $('#timerButton').addEventListener('click',startTimer);$('#toReflection').addEventListener('click',()=>{resetTimer();go(4)});
+    $$('#reactions .reaction').forEach(button=>button.addEventListener('click',()=>{state.reaction=button.dataset.value;selectGroup('#reactions','.reaction',state.reaction);updateButtons();save()}));
+    $('#reflectionInput').addEventListener('input',updateButtons);$('#toAction').addEventListener('click',()=>{state.reflection=$('#reflectionInput').value.trim();go(5)});
+    $$('#actionChoices .action-card').forEach(button=>button.addEventListener('click',()=>{state.action=button.dataset.value;selectGroup('#actionChoices','.action-card',state.action);$('#actionInput').value=state.action;updateButtons();save()}));
+    $('#actionInput').addEventListener('input',event=>{state.action=event.target.value.trim();$$('#actionChoices .action-card').forEach(button=>button.classList.toggle('selected',button.dataset.value===state.action));updateButtons()});
+    $$('#usefulChoices .chip').forEach(button=>button.addEventListener('click',()=>{state.usefulStage=button.textContent.trim();$$('#usefulChoices .chip').forEach(item=>item.classList.toggle('selected',item===button));updateButtons();save()}));
+    $$('#dropChoices .chip').forEach(button=>button.addEventListener('click',()=>{state.dropStage=button.textContent.trim();$$('#dropChoices .chip').forEach(item=>item.classList.toggle('selected',item===button));updateButtons();save()}));
+    $('#finishButton').addEventListener('click',()=>{state.action=$('#actionInput').value.trim()||state.action;state.completedAt=new Date().toISOString();$('#sumInterest').textContent=state.interest;$('#sumQuestion').textContent=state.question;$('#sumAction').textContent=state.action;go(6)});
+    $('#copySummary').addEventListener('click',async()=>{const text=`Мой интерес: ${state.interest}\nМой вопрос: ${state.question}\nМой следующий шаг: ${state.action}`;try{await navigator.clipboard.writeText(text);showToast('План скопирован')}catch{showToast('Не удалось скопировать')}});
+    $('#restartButton').addEventListener('click',()=>{state={...emptyState};localStorage.removeItem('leaderGameSession');location.reload()});
+    $$('.route-step').forEach(button=>button.addEventListener('click',()=>{const stage=Number(button.dataset.go);if(stage<=state.maxStage)go(stage)}));
+
+    const overlay=$('#facilitatorOverlay');$('#facilitatorButton').addEventListener('click',()=>overlay.classList.add('open'));$('#closeDrawer').addEventListener('click',()=>overlay.classList.remove('open'));overlay.addEventListener('click',event=>{if(event.target===overlay)overlay.classList.remove('open')});document.addEventListener('keydown',event=>{if(event.key==='Escape')overlay.classList.remove('open')});
+    const observation=JSON.parse(localStorage.getItem('leaderGameObservation')||'{"counts":{},"checks":{},"note":""}');
+    function saveObservation(){observation.note=$('#facilitatorNote').value;localStorage.setItem('leaderGameObservation',JSON.stringify(observation))}
+    $$('#observeGrid .observe').forEach(button=>{const key=button.dataset.stage;button.querySelector('b').textContent=observation.counts[key]||0;button.addEventListener('click',()=>{observation.counts[key]=(observation.counts[key]||0)+1;button.querySelector('b').textContent=observation.counts[key];saveObservation()})});
+    $$('[data-observe]').forEach(input=>{input.checked=Boolean(observation.checks[input.dataset.observe]);input.addEventListener('change',()=>{observation.checks[input.dataset.observe]=input.checked;saveObservation()})});$('#facilitatorNote').value=observation.note||'';$('#facilitatorNote').addEventListener('input',saveObservation);
+    $('#exportButton').addEventListener('click',()=>{saveObservation();const exportData={schema:'leader-route-v1',exportedAt:new Date().toISOString(),participant:{interest:state.interest,preInterest:state.preInterest,preQuestion:state.preQuestion,previousExperience:state.previousExperience,question:state.question,dialogueMode:state.dialogueMode,followUp:state.followUp,reaction:state.reaction,reflection:state.reflection,action:state.action,postReadiness:state.postReadiness,usefulStage:state.usefulStage,dropStage:state.dropStage,startedAt:state.startedAt,completedAt:state.completedAt},facilitator:observation};const blob=new Blob([JSON.stringify(exportData,null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`leader-route-${new Date().toISOString().slice(0,10)}.json`;link.click();URL.revokeObjectURL(link.href);showToast('Анонимная выгрузка готова')});
+    $('#clearButton').addEventListener('click',()=>{if(confirm('Удалить ответы участника и заметки ведущего с этого устройства?')){localStorage.removeItem('leaderGameSession');localStorage.removeItem('leaderGameObservation');location.reload()}});
+    function restoreSession(){
+      const paintScale=(id,value)=>[...$(id).children].forEach((button,index)=>button.classList.toggle('selected',index<value));
+      paintScale('#preScale',state.preInterest);paintScale('#preQuestionScale',state.preQuestion);paintScale('#postScale',state.postReadiness);
+      selectGroup('#interestChoices','.choice',state.interest);selectGroup('#dialogueMode','.choice',state.dialogueMode);selectGroup('#reactions','.reaction',state.reaction);selectGroup('#actionChoices','.action-card',state.action);
+      const restoreChip=(id,value)=>$$(`${id} .chip`).forEach(button=>button.classList.toggle('selected',button.textContent.trim()===value));
+      restoreChip('#experienceChoices',state.previousExperience);restoreChip('#followUps',state.followUp);restoreChip('#usefulChoices',state.usefulStage);restoreChip('#dropChoices',state.dropStage);
+      $('#questionInput').value=state.question;$('#reflectionInput').value=state.reflection;$('#actionInput').value=state.action;
+      if(state.question){$('#dialogueQuestion').textContent=state.question;$('#bankCount').textContent='1';$('#bankPreview').textContent=state.question}
+      if(state.interest)drawCard();
+      if(state.stage===6){$('#sumInterest').textContent=state.interest;$('#sumQuestion').textContent=state.question;$('#sumAction').textContent=state.action}
+      if(state.stage>0)go(state.stage);
+    }
+    restoreSession();
+    updateButtons();
+  </script>
+</body>
+</html>
