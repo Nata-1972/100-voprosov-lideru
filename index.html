@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3efdf">
-  <meta name="description" content="Интерактивная игра для подготовки школьников 8–11 классов к встрече с лидером.">
-  <title>100 вопросов лидеру — игра</title>
+  <meta name="description" content="Платформа для вопросов учеников, встреч с лидерами и следующих шагов.">
+  <title>100 вопросов лидеру — платформа диалога</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@600;700&display=swap');
     :root{--ink:#171713;--paper:#f3efdf;--white:#fffdf7;--blue:#3155d9;--blue-dark:#183694;--acid:#d9f36a;--orange:#ff7247;--muted:#6d6b61;--line:#c9c4b3;--shadow:6px 6px 0 var(--ink)}
@@ -255,7 +255,7 @@
         const result=await response.json();
         if(!response.ok)throw new Error(result.error||'Не удалось отправить вопрос.');
         state.question=question;$('#dialogueQuestion').textContent=question;$('#bankCount').textContent='1';$('#bankPreview').textContent=question;showToast('Вопрос отправлен команде');go(3);
-      }catch(error){showToast(error.message||'Нет связи с ботом ведущего');button.disabled=false}
+      }catch(error){showToast(error.message||'Нет связи с платформой');button.disabled=false}
       finally{button.textContent='Отправить ведущему →'}
     });
     $$('#dialogueMode .choice').forEach(button=>button.addEventListener('click',()=>{state.dialogueMode=button.dataset.value;selectGroup('#dialogueMode','.choice',state.dialogueMode);updateButtons();save()}));
