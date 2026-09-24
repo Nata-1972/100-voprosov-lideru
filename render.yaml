@@ -11,3 +11,15 @@ services:
         value: 3.12.8
       - key: FACILITATOR_BOT_TOKEN
         sync: false
+      - key: LEADER_EMAIL
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 465
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false

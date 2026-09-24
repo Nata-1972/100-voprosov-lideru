@@ -1,5 +1,6 @@
 import json
 import os
+import smtplib
 import socket
 import threading
 import time
@@ -8,6 +9,7 @@ import urllib.parse
 import urllib.request
 import webbrowser
 from datetime import datetime
+from email.message import EmailMessage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -19,9 +21,15 @@ TOKEN = os.environ.get("FACILITATOR_BOT_TOKEN", "").strip()
 HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "3000"))
 GAME_ACCESS_CODE = os.environ.get("GAME_ACCESS_CODE", "").strip()
+LEADER_EMAIL = os.environ.get("LEADER_EMAIL", "").strip()
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))
+SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "").strip()
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
+SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USERNAME).strip()
 LOCK = threading.Lock()
 STOP_EVENT = threading.Event()
-STATE = {"subscribers": [], "questions": []}
+STATE = {"subscribers": [], "questions": [], "leaders": []}
 
 
 def load_state():
@@ -31,6 +39,7 @@ def load_state():
         STATE = {
             "subscribers": list(saved.get("subscribers", [])),
             "questions": list(saved.get("questions", []))[-100:],
+            "leaders": list(saved.get("leaders", []))[-100:],
         }
     except FileNotFoundError:
         pass
@@ -62,6 +71,24 @@ def send_message(chat_id, text):
     telegram("sendMessage", {"chat_id": chat_id, "text": text}, timeout=15)
 
 
+def email_configured():
+    return all((LEADER_EMAIL, SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM))
+
+
+def send_email(subject, text):
+    if not email_configured():
+        return False
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = SMTP_FROM
+    message["To"] = LEADER_EMAIL
+    message.set_content(text)
+    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=20) as smtp:
+        smtp.login(SMTP_USERNAME, SMTP_PASSWORD)
+        smtp.send_message(message)
+    return True
+
+
 def recent_questions():
     with LOCK:
         questions = list(STATE["questions"][-10:])
@@ -71,6 +98,17 @@ def recent_questions():
     for number, item in enumerate(reversed(questions), 1):
         theme = f" · {item['interest']}" if item.get("interest") else ""
         lines.append(f"{number}. {item['question']}{theme}")
+    return "\n\n".join(lines)
+
+
+def recent_leaders():
+    with LOCK:
+        leaders = list(STATE["leaders"][-10:])
+    if not leaders:
+        return "Пока ни одного лидера не предложено."
+    lines = []
+    for number, item in enumerate(reversed(leaders), 1):
+        lines.append(f"{number}. {item['leader']} · {item['sphere']}\n{item['reason']}")
     return "\n\n".join(lines)
 
 
@@ -94,6 +132,7 @@ def handle_bot_message(message):
             "Вы подключены как ведущий «100 вопросов лидеру». Новые вопросы "
             "будут приходить сюда без имён и контактов.\n\n"
             "/questions — последние 10 вопросов\n"
+            "/leaders — последние 10 предложенных лидеров\n"
             "/status — состояние подключения\n"
             "/stop — отключить уведомления",
         )
@@ -101,6 +140,10 @@ def handle_bot_message(message):
         with LOCK:
             active = chat_id in STATE["subscribers"]
         send_message(chat_id, recent_questions() if active else "Сначала отправьте /start.")
+    elif text == "/leaders":
+        with LOCK:
+            active = chat_id in STATE["subscribers"]
+        send_message(chat_id, recent_leaders() if active else "Сначала отправьте /start.")
     elif text == "/status":
         with LOCK:
             active = chat_id in STATE["subscribers"]
@@ -117,7 +160,7 @@ def handle_bot_message(message):
         save_state()
         send_message(chat_id, "Уведомления отключены. Для повторного подключения отправьте /start.")
     else:
-        send_message(chat_id, "Используйте /start, /questions, /status или /stop.")
+        send_message(chat_id, "Используйте /start, /questions, /leaders, /status или /stop.")
 
 
 def polling_loop():
@@ -130,6 +173,7 @@ def polling_loop():
                     [
                         {"command": "start", "description": "Подключить ведущего"},
                         {"command": "questions", "description": "Последние 10 вопросов"},
+                        {"command": "leaders", "description": "Предложенные лидеры"},
                         {"command": "status", "description": "Проверить подключение"},
                         {"command": "stop", "description": "Отключить уведомления"},
                     ],
@@ -175,6 +219,44 @@ def deliver_question(item):
             delivered += 1
         except Exception as error:
             print(f"Не удалось отправить сообщение ведущему: {error}")
+    try:
+        if send_email(
+            "Новый вопрос ученика — 100 вопросов лидеру",
+            "Новый анонимный вопрос ученика\n\n"
+            f"{item['question']}\n\n"
+            f"Тема: {item.get('interest') or 'не указана'}\n"
+            f"Время: {item['receivedAt']}",
+        ):
+            delivered += 1
+    except Exception as error:
+        print(f"Не удалось отправить вопрос на email: {error}")
+    return delivered
+
+
+def deliver_leader(item):
+    with LOCK:
+        subscribers = list(STATE["subscribers"])
+    question = item.get("question") or "не указан"
+    text = (
+        "Ученики предложили лидера\n\n"
+        f"Лидер: {item['leader']}\n"
+        f"Сфера: {item['sphere']}\n"
+        f"Почему стоит пригласить: {item['reason']}\n"
+        f"Вопрос лидеру: {question}\n"
+        f"Время: {item['receivedAt']}"
+    )
+    delivered = 0
+    for chat_id in subscribers:
+        try:
+            send_message(chat_id, text)
+            delivered += 1
+        except Exception as error:
+            print(f"Не удалось отправить предложение в Telegram: {error}")
+    try:
+        if send_email("Ученики предложили лидера для встречи", text):
+            delivered += 1
+    except Exception as error:
+        print(f"Не удалось отправить предложение на email: {error}")
     return delivered
 
 
@@ -206,7 +288,7 @@ class GameHandler(BaseHTTPRequestHandler):
         path = urllib.parse.urlsplit(self.path).path
         if path == "/api/status":
             with LOCK:
-                connected = bool(STATE["subscribers"])
+                connected = bool(STATE["subscribers"]) or email_configured()
             self.send_json(200, {"connected": connected})
             return
         if path in ("/", "/index.html"):
@@ -222,7 +304,8 @@ class GameHandler(BaseHTTPRequestHandler):
         self.send_json(404, {"error": "Не найдено."})
 
     def do_POST(self):
-        if urllib.parse.urlsplit(self.path).path != "/api/questions":
+        path = urllib.parse.urlsplit(self.path).path
+        if path not in ("/api/questions", "/api/leaders"):
             self.send_json(404, {"error": "Не найдено."})
             return
         if GAME_ACCESS_CODE and self.headers.get("X-Game-Code", "") != GAME_ACCESS_CODE:
@@ -238,30 +321,48 @@ class GameHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": "Некорректный запрос."})
             return
 
-        question = body.get("question", "")
-        interest = body.get("interest", "")
-        question = question.strip() if isinstance(question, str) else ""
-        interest = interest.strip()[:80] if isinstance(interest, str) else ""
-        if not 12 <= len(question) <= 240:
-            self.send_json(400, {"error": "Вопрос должен содержать от 12 до 240 символов."})
+        received_at = datetime.now().astimezone().strftime("%d.%m.%Y %H:%M")
+        if path == "/api/questions":
+            question = body.get("question", "")
+            interest = body.get("interest", "")
+            question = question.strip() if isinstance(question, str) else ""
+            interest = interest.strip()[:80] if isinstance(interest, str) else ""
+            if not 12 <= len(question) <= 240:
+                self.send_json(400, {"error": "Вопрос должен содержать от 12 до 240 символов."})
+                return
+            item = {"question": question, "interest": interest, "receivedAt": received_at}
+            delivered = deliver_question(item)
+            collection = "questions"
+        else:
+            leader = body.get("leader", "")
+            sphere = body.get("sphere", "")
+            reason = body.get("reason", "")
+            question = body.get("question", "")
+            leader = leader.strip() if isinstance(leader, str) else ""
+            sphere = sphere.strip() if isinstance(sphere, str) else ""
+            reason = reason.strip() if isinstance(reason, str) else ""
+            question = question.strip() if isinstance(question, str) else ""
+            if not 2 <= len(leader) <= 100 or not 2 <= len(sphere) <= 80:
+                self.send_json(400, {"error": "Укажите лидера и сферу его деятельности."})
+                return
+            if not 8 <= len(reason) <= 500 or len(question) > 240:
+                self.send_json(400, {"error": "Расскажите, почему этого лидера стоит пригласить."})
+                return
+            item = {
+                "leader": leader,
+                "sphere": sphere,
+                "reason": reason,
+                "question": question,
+                "receivedAt": received_at,
+            }
+            delivered = deliver_leader(item)
+            collection = "leaders"
+        if not delivered:
+            self.send_json(503, {"error": "Канал ведущего не настроен. Попробуйте позже."})
             return
         with LOCK:
-            has_subscribers = bool(STATE["subscribers"])
-        if not has_subscribers:
-            self.send_json(503, {"error": "Ведущий ещё не подключил бота командой /start."})
-            return
-
-        item = {
-            "question": question,
-            "interest": interest,
-            "receivedAt": datetime.now().astimezone().strftime("%d.%m.%Y %H:%M"),
-        }
-        if not deliver_question(item):
-            self.send_json(503, {"error": "Бот ведущего недоступен. Попробуйте ещё раз."})
-            return
-        with LOCK:
-            STATE["questions"].append(item)
-            STATE["questions"] = STATE["questions"][-100:]
+            STATE[collection].append(item)
+            STATE[collection] = STATE[collection][-100:]
         save_state()
         self.send_json(201, {"delivered": True})
 
@@ -276,11 +377,14 @@ def local_ip():
 
 
 def main():
-    if not TOKEN:
-        raise SystemExit("Не задан FACILITATOR_BOT_TOKEN.")
+    if not TOKEN and not email_configured():
+        raise SystemExit("Настройте email или FACILITATOR_BOT_TOKEN для получения обращений.")
     load_state()
-    bot_thread = threading.Thread(target=polling_loop, daemon=True)
-    bot_thread.start()
+    if TOKEN:
+        bot_thread = threading.Thread(target=polling_loop, daemon=True)
+        bot_thread.start()
+    if email_configured():
+        print(f"Email ведущего настроен: {LEADER_EMAIL}")
     server = ThreadingHTTPServer((HOST, PORT), GameHandler)
     print(f"Игра на этом компьютере: http://localhost:{PORT}")
     print(f"Игра в локальной сети: http://{local_ip()}:{PORT}")
