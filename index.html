@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f3efdf">
+  <meta name="theme-color" content="#f2ebff">
   <meta name="description" content="Платформа для вопросов учеников, встреч с лидерами и следующих шагов.">
   <title>100 вопросов лидеру — платформа диалога</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@600;700&display=swap');
-    :root{--ink:#171713;--paper:#f3efdf;--white:#fffdf7;--blue:#3155d9;--blue-dark:#183694;--acid:#d9f36a;--orange:#ff7247;--muted:#6d6b61;--line:#c9c4b3;--shadow:6px 6px 0 var(--ink)}
+    :root{--ink:#21132e;--paper:#f2ebff;--white:#fffcff;--blue:#6530b5;--blue-dark:#472078;--acid:#b6f224;--orange:#7840bc;--muted:#625570;--line:#cbb8df;--shadow:6px 6px 0 var(--ink)}
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,Arial,sans-serif;min-height:100vh;background-image:radial-gradient(#b8b3a5 0.7px,transparent 0.7px);background-size:15px 15px}
     button,input,textarea{font:inherit}
     button{color:inherit}
     button,a{-webkit-tap-highlight-color:transparent}
-    button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+    button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--ink);outline-offset:3px;box-shadow:0 0 0 5px var(--acid)}
     .app{width:min(1440px,100%);min-height:100vh;margin:auto;background:var(--paper);border-inline:1px solid var(--ink)}
     .topbar{min-height:78px;border-bottom:2px solid var(--ink);display:grid;grid-template-columns:330px 1fr auto;align-items:center;padding:0 28px;gap:24px;background:rgba(243,239,223,.96);position:sticky;top:0;z-index:20}
     .brand{display:flex;align-items:center;gap:12px;font-family:Unbounded,sans-serif;font-weight:700;font-size:13px;line-height:1.1;text-transform:uppercase}
@@ -113,6 +113,25 @@
     .toast{position:fixed;right:24px;bottom:24px;background:var(--ink);color:#fff;padding:13px 17px;font-size:11px;font-weight:800;z-index:100;transform:translateY(100px);transition:transform .25s}.toast.show{transform:none}
     @media(max-width:900px){.topbar{grid-template-columns:1fr auto}.public-nav,.privacy,.connection-badge{display:none}.layout{grid-template-columns:1fr}.sidebar{border:0;border-bottom:2px solid var(--ink);padding:13px 18px}.sidebar>.eyebrow,.route-title,.bank{display:none}.route{grid-template-columns:repeat(5,1fr);gap:3px}.route:before{left:8%;right:8%;top:20px;bottom:auto;border-left:0;border-top:2px dashed #aaa492}.route-step{display:flex;justify-content:center;padding:1px}.route-copy{display:none}.route-dot{width:38px;height:38px;background:var(--paper)}.main{padding:38px 22px 60px}.hero-grid{grid-template-columns:1fr}.facts{grid-template-columns:repeat(3,1fr)}.fact{display:block}.fact span{display:block;text-align:left;margin-top:5px}.dialogue-grid{grid-template-columns:1fr}.timer{position:static}.action-list{grid-template-columns:1fr}.platform-strip{grid-template-columns:1fr}.meeting-card{grid-template-columns:1fr}.archive-grid{grid-template-columns:1fr}.home-head{display:block}.home-head .button{margin-top:18px}}
     @media(max-width:580px){.app{border:0}.topbar{min-height:66px;padding:0 15px}.brand{font-size:10px}.brand-mark{width:36px;height:36px}.icon-button{font-size:0;width:40px;padding:0}.icon-button:after{content:"≡";font-size:18px}#proposalButton:after{content:"+"}.main{padding-inline:16px}.hero-card{padding:25px;min-height:390px}.hero-card h1{font-size:45px}.choices{grid-template-columns:1fr}.step-head{margin-bottom:24px}.step-no{font-size:10px}.panel{padding:19px}.footer-actions{align-items:stretch;flex-direction:column-reverse}.footer-actions .button{width:100%}.card-table{padding:13px}.question-card{padding:20px;min-height:320px}.question-card blockquote{font-size:20px}.summary{grid-template-columns:1fr}.observe-grid{grid-template-columns:repeat(5,1fr)}.drawer{padding:21px}.facts{grid-template-columns:1fr}.fact{display:flex}.fact span{text-align:right}.reaction-row{display:grid;grid-template-columns:repeat(2,1fr)}.reaction{width:auto}.button{width:100%}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.proposal-foot{align-items:stretch;flex-direction:column}.proposal-modal{padding:22px}}
+    /* Lavender and lime palette across every stage of the platform. */
+    body{background-image:radial-gradient(#c6b1e2 0.7px,transparent 0.7px)}
+    .topbar{background:rgba(242,235,255,.96)}
+    .sidebar,.data-note{background:#e5d5fa}
+    .route:before{border-color:#a68bc6}
+    .bank{box-shadow:4px 4px 0 #b7a2d1}
+    .lead{color:#51445e}
+    .hero-card p,.meeting-main p,.success .lead{color:#efe3ff}
+    .panel{box-shadow:5px 5px 0 #baa6d3}
+    .card-table{background:#dac6f1}
+    .preview-card{background:#f0e4ff}
+    .status-item,.summary span{color:#e3cef9}
+    .timer p{color:#3f4b1f}
+    .overlay{background:#21132eb8}
+    .platform-card:nth-child(3){background:#d9bcff}
+    .platform-card p{color:#51445e}
+    .proposal-modal:before{color:#6530b50c}
+    .hint.good{color:#35651b}.hint.warn{color:#873567}
+    @media(max-width:900px){.route:before{border-color:#a68bc6}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
   </style>
 </head>
