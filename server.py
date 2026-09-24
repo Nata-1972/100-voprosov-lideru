@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import smtplib
 import socket
 import threading
@@ -87,6 +88,26 @@ def send_email(subject, text):
         smtp.login(SMTP_USERNAME, SMTP_PASSWORD)
         smtp.send_message(message)
     return True
+
+
+def contains_personal_data(text):
+    patterns = (
+        r"\b[\w.+-]+@[\w.-]+\.[A-Za-zА-Яа-я]{2,}\b",
+        r"(?:\+?7|8)[\s()\-]*\d{3}[\s()\-]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}",
+        r"https?://|t\.me/|vk\.com/|@[A-Za-z0-9_]{4,}",
+    )
+    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
+
+
+def existing_submission(submission_id):
+    if not submission_id:
+        return None
+    with LOCK:
+        for collection in ("questions", "leaders"):
+            for item in STATE[collection]:
+                if item.get("submissionId") == submission_id:
+                    return item
+    return None
 
 
 def recent_questions():
@@ -321,6 +342,12 @@ class GameHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": "Некорректный запрос."})
             return
 
+        submission_id = body.get("submissionId", "")
+        submission_id = submission_id.strip()[:80] if isinstance(submission_id, str) else ""
+        duplicate = existing_submission(submission_id)
+        if duplicate:
+            self.send_json(200, {"saved": True, "deliveryStatus": duplicate.get("deliveryStatus", "pending")})
+            return
         received_at = datetime.now().astimezone().strftime("%d.%m.%Y %H:%M")
         if path == "/api/questions":
             question = body.get("question", "")
@@ -330,8 +357,10 @@ class GameHandler(BaseHTTPRequestHandler):
             if not 12 <= len(question) <= 240:
                 self.send_json(400, {"error": "Вопрос должен содержать от 12 до 240 символов."})
                 return
-            item = {"question": question, "interest": interest, "receivedAt": received_at}
-            delivered = deliver_question(item)
+            if contains_personal_data(question):
+                self.send_json(400, {"error": "Уберите из вопроса телефон, email, ссылку или имя пользователя."})
+                return
+            item = {"submissionId": submission_id, "question": question, "interest": interest, "receivedAt": received_at, "moderationStatus": "pending", "deliveryStatus": "pending"}
             collection = "questions"
         else:
             leader = body.get("leader", "")
@@ -348,23 +377,28 @@ class GameHandler(BaseHTTPRequestHandler):
             if not 8 <= len(reason) <= 500 or len(question) > 240:
                 self.send_json(400, {"error": "Расскажите, почему этого лидера стоит пригласить."})
                 return
+            if contains_personal_data(f"{reason} {question}"):
+                self.send_json(400, {"error": "Не добавляйте контакты, ссылки или имя пользователя. Команда найдёт публичный контакт лидера самостоятельно."})
+                return
             item = {
+                "submissionId": submission_id,
                 "leader": leader,
                 "sphere": sphere,
                 "reason": reason,
                 "question": question,
                 "receivedAt": received_at,
+                "moderationStatus": "pending",
+                "deliveryStatus": "pending",
             }
-            delivered = deliver_leader(item)
             collection = "leaders"
-        if not delivered:
-            self.send_json(503, {"error": "Канал ведущего не настроен. Попробуйте позже."})
-            return
         with LOCK:
             STATE[collection].append(item)
             STATE[collection] = STATE[collection][-100:]
         save_state()
-        self.send_json(201, {"delivered": True})
+        delivered = deliver_question(item) if collection == "questions" else deliver_leader(item)
+        item["deliveryStatus"] = "delivered" if delivered else "pending"
+        save_state()
+        self.send_json(201, {"saved": True, "deliveryStatus": item["deliveryStatus"]})
 
 
 def local_ip():
