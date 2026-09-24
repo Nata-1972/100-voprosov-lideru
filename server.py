@@ -231,7 +231,9 @@ def deliver_question(item):
     message = (
         "Новый вопрос ученика\n\n"
         f"{item['question']}\n\n"
+        f"Почему важен: {item.get('reason') or 'не указано'}\n"
         f"Тема: {item.get('interest') or 'не указана'}\n"
+        "Публикация: анонимно для аудитории\n"
         f"Время: {item['receivedAt']}"
     )
     for chat_id in subscribers:
@@ -245,7 +247,9 @@ def deliver_question(item):
             "Новый вопрос ученика — 100 вопросов лидеру",
             "Новый анонимный вопрос ученика\n\n"
             f"{item['question']}\n\n"
+            f"Почему важен: {item.get('reason') or 'не указано'}\n"
             f"Тема: {item.get('interest') or 'не указана'}\n"
+            "Публикация: анонимно для аудитории\n"
             f"Время: {item['receivedAt']}",
         ):
             delivered += 1
@@ -346,21 +350,31 @@ class GameHandler(BaseHTTPRequestHandler):
         submission_id = submission_id.strip()[:80] if isinstance(submission_id, str) else ""
         duplicate = existing_submission(submission_id)
         if duplicate:
-            self.send_json(200, {"saved": True, "deliveryStatus": duplicate.get("deliveryStatus", "pending")})
+            self.send_json(200, {"saved": True, "deliveryStatus": duplicate.get("deliveryStatus", "pending"), "moderationStatus": duplicate.get("moderationStatus", "pending")})
             return
         received_at = datetime.now().astimezone().strftime("%d.%m.%Y %H:%M")
         if path == "/api/questions":
             question = body.get("question", "")
+            reason = body.get("reason", "")
             interest = body.get("interest", "")
+            display_mode = body.get("displayMode", "")
+            rules_accepted = body.get("rulesAccepted") is True
             question = question.strip() if isinstance(question, str) else ""
+            reason = reason.strip() if isinstance(reason, str) else ""
             interest = interest.strip()[:80] if isinstance(interest, str) else ""
             if not 12 <= len(question) <= 240:
                 self.send_json(400, {"error": "Вопрос должен содержать от 12 до 240 символов."})
                 return
-            if contains_personal_data(question):
-                self.send_json(400, {"error": "Уберите из вопроса телефон, email, ссылку или имя пользователя."})
+            if not 8 <= len(reason) <= 300:
+                self.send_json(400, {"error": "Коротко напишите, почему этот вопрос важен."})
                 return
-            item = {"submissionId": submission_id, "question": question, "interest": interest, "receivedAt": received_at, "moderationStatus": "pending", "deliveryStatus": "pending"}
+            if display_mode != "anonymous" or not rules_accepted:
+                self.send_json(400, {"error": "Подтвердите правила безопасной анонимной отправки."})
+                return
+            if contains_personal_data(f"{question} {reason}"):
+                self.send_json(400, {"error": "Уберите из вопроса и пояснения телефон, email, ссылку или имя пользователя."})
+                return
+            item = {"submissionId": submission_id, "question": question, "reason": reason, "interest": interest, "displayMode": display_mode, "receivedAt": received_at, "moderationStatus": "pending", "deliveryStatus": "pending"}
             collection = "questions"
         else:
             leader = body.get("leader", "")
@@ -398,7 +412,7 @@ class GameHandler(BaseHTTPRequestHandler):
         delivered = deliver_question(item) if collection == "questions" else deliver_leader(item)
         item["deliveryStatus"] = "delivered" if delivered else "pending"
         save_state()
-        self.send_json(201, {"saved": True, "deliveryStatus": item["deliveryStatus"]})
+        self.send_json(201, {"saved": True, "deliveryStatus": item["deliveryStatus"], "moderationStatus": item["moderationStatus"]})
 
 
 def local_ip():
@@ -412,7 +426,7 @@ def local_ip():
 
 def main():
     if not TOKEN and not email_configured():
-        raise SystemExit("Настройте email или FACILITATOR_BOT_TOKEN для получения обращений.")
+        print("Канал доставки не настроен. Обращения будут ожидать доставки.")
     load_state()
     if TOKEN:
         bot_thread = threading.Thread(target=polling_loop, daemon=True)
@@ -420,10 +434,11 @@ def main():
     if email_configured():
         print(f"Email ведущего настроен: {LEADER_EMAIL}")
     server = ThreadingHTTPServer((HOST, PORT), GameHandler)
-    print(f"Игра на этом компьютере: http://localhost:{PORT}")
-    print(f"Игра в локальной сети: http://{local_ip()}:{PORT}")
-    print("Для остановки закройте окно или нажмите Ctrl+C.")
-    threading.Timer(1, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
+    if not os.environ.get("RENDER"):
+        print(f"Игра на этом компьютере: http://localhost:{PORT}")
+        print(f"Игра в локальной сети: http://{local_ip()}:{PORT}")
+        print("Для остановки закройте окно или нажмите Ctrl+C.")
+        threading.Timer(1, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

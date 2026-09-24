@@ -92,6 +92,7 @@
     .draw-button{align-self:flex-start;border:1px solid #fff;background:transparent;color:#fff;padding:9px 13px;font-weight:800;font-size:10px;cursor:pointer;position:relative;z-index:2}
     textarea{width:100%;min-height:105px;resize:vertical;border:1.5px solid var(--ink);background:#fff;padding:16px;line-height:1.55}
     .hint{font-size:11px;line-height:1.55;color:var(--muted);margin:10px 0 0}.hint.good{color:#1d6b41;font-weight:700}.hint.warn{color:#a74225;font-weight:700}
+    .form-step{display:grid;grid-template-columns:36px 1fr;gap:14px;align-items:start;padding:20px 0;border-bottom:1px solid var(--line)}.form-step:first-child{padding-top:0}.form-step:last-child{border-bottom:0;padding-bottom:0}.form-step-no{width:32px;height:32px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--acid);font:700 10px Unbounded,sans-serif}.form-step h3{font-family:Manrope,sans-serif;font-size:13px;margin:7px 0 10px}.mode-card{border:1.5px solid var(--ink);background:var(--acid);padding:14px;display:flex;gap:11px;align-items:start;font-size:11px;line-height:1.55}.mode-card b{display:block;margin-bottom:3px}.preview-card{border:1.5px dashed var(--blue);background:#eef1ff;padding:17px}.preview-card span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:800;margin-bottom:8px}.preview-card p{font-size:13px;line-height:1.55;margin:0}.rule-check{display:flex;gap:10px;align-items:start;font-size:11px;line-height:1.55}.rule-check input{width:18px;height:18px;flex:none;margin-top:1px}.status-timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:24px 0}.status-item{border-top:3px solid #ffffff38;padding-top:10px;color:#aebbed;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.status-item.active{border-color:var(--acid);color:#fff}.status-item b{display:block;font-size:11px;text-transform:none;letter-spacing:0;margin-top:5px}
     .dialogue-grid{display:grid;grid-template-columns:1fr 290px;gap:22px;align-items:start}
     .speech{background:var(--blue);color:#fff;border:2px solid var(--ink);padding:29px;box-shadow:6px 6px 0 var(--ink);position:relative;margin-bottom:25px}
     .speech:after{content:"";position:absolute;left:35px;bottom:-18px;border-width:18px 18px 0 0;border-style:solid;border-color:var(--ink) transparent transparent transparent}
@@ -162,7 +163,7 @@
         <section class="screen" id="screen2">
           <div class="step-head"><div><span class="eyebrow">В колоде · 100 стартов</span><h2>Преврати интерес в вопрос</h2></div><span class="step-no">02 / 05</span></div>
           <div class="card-table"><article class="question-card"><div class="card-top"><span id="cardTheme">Тема</span><span id="cardNumber">Карта 001 / 100</span></div><blockquote id="cardText">Какой выбор сильнее всего повлиял на ваш профессиональный путь?</blockquote><button class="draw-button" id="drawButton" type="button">↻ Другая карточка</button></article></div>
-          <div class="panel"><label class="panel-label" for="questionInput">Сделай вопрос своим</label><textarea id="questionInput" maxlength="240" placeholder="Например: Как вы поняли, что хотите заниматься именно этим?"></textarea><p class="hint" id="questionHint">Сильный вопрос начинается с «как», «почему», «что помогло» и просит привести пример.</p></div>
+          <div class="panel"><span class="panel-label">Пошаговая отправка</span><div class="form-step"><span class="form-step-no">1</span><div><h3><label for="questionInput">Сделай вопрос своим</label></h3><textarea id="questionInput" maxlength="240" placeholder="Например: Как вы поняли, что хотите заниматься именно этим?"></textarea><p class="hint" id="questionHint">Сильный вопрос начинается с «как», «почему», «что помогло» и просит привести пример.</p></div></div><div class="form-step"><span class="form-step-no">2</span><div><h3><label for="questionReason">Почему этот вопрос важен?</label></h3><textarea id="questionReason" maxlength="300" placeholder="Хочу понять, как реальный опыт гостя поможет разобраться в теме..."></textarea><p class="hint">Это увидит только проектная команда. Обоснование помогает модератору сохранить смысл вопроса.</p></div></div><div class="form-step"><span class="form-step-no">3</span><div><h3>Выбери формат</h3><div class="mode-card"><span aria-hidden="true">◉</span><div><b>Анонимно для аудитории</b>Ведущий получит текст без имени, класса, школы и контактов. Открытая отправка появится только после безопасной школьной авторизации и необходимых согласий.</div></div></div></div><div class="form-step"><span class="form-step-no">4</span><div><h3>Проверь перед отправкой</h3><div class="preview-card"><span>Предпросмотр вопроса</span><p id="questionPreview">Здесь появится твой вопрос.</p></div><label class="rule-check" style="margin-top:14px"><input id="questionRules" type="checkbox"> <span>Я не указал(а) телефон, email, ссылку, имя пользователя и другие личные данные. Я понимаю, что вопрос пройдёт премодерацию.</span></label></div></div></div>
           <div class="footer-actions"><button class="button white" id="useCard" type="button">Взять текст карточки</button><button class="button blue" id="saveQuestion" type="button" disabled>Отправить ведущему →</button></div>
         </section>
 
@@ -190,7 +191,7 @@
         </section>
 
         <section class="screen" id="screen6">
-          <div class="success"><span class="eyebrow" style="color:var(--acid)">Маршрут пройден</span><h2>Один вопрос уже стал действием.</h2><p class="lead">Не нужно выбрать профессию за одну встречу. Достаточно услышать опыт, проверить свой интерес и сделать следующий небольшой шаг.</p><div class="summary"><div><span>Мой интерес</span><b id="sumInterest"></b></div><div><span>Мой вопрос</span><b id="sumQuestion"></b></div><div><span>Следующий шаг</span><b id="sumAction"></b></div></div><div class="hero-actions"><button class="button" id="copySummary" type="button">Скопировать мой план</button><button class="button white" id="restartButton" type="button">Пройти ещё раз</button></div></div>
+          <div class="success"><span class="eyebrow" style="color:var(--acid)">Маршрут пройден</span><h2>Один вопрос уже стал действием.</h2><p class="lead">Не нужно выбрать профессию за одну встречу. Достаточно услышать опыт, проверить свой интерес и сделать следующий небольшой шаг.</p><div class="status-timeline" aria-label="Статус вопроса"><div class="status-item active">Готово<b>Отправлен</b></div><div class="status-item active">Сейчас<b>На модерации</b></div><div class="status-item">Далее<b>Принят или уточнён</b></div><div class="status-item">На встрече<b>Прозвучал / отвечен</b></div></div><div class="summary"><div><span>Мой интерес</span><b id="sumInterest"></b></div><div><span>Мой вопрос</span><b id="sumQuestion"></b></div><div><span>Следующий шаг</span><b id="sumAction"></b></div></div><div class="hero-actions"><button class="button" id="copySummary" type="button">Скопировать мой план</button><button class="button white" id="restartButton" type="button">Пройти ещё раз</button></div></div>
         </section>
       </main>
     </div>
@@ -219,7 +220,7 @@
       {name:'Баланс и ценности', questions:['Что помогает вам понимать, что действительно важно?','Как вы сохраняете время на жизнь вне работы?','От каких возможностей вы сознательно отказались?','Как ваши ценности влияют на решения?','Что даёт вам энергию в сложный период?','Как вы замечаете, что устали?','Что для вас означает успех сейчас?','Как изменилось ваше отношение к достижениям?','Как вы справляетесь с ожиданиями других?','Что помогает не сравнивать себя с людьми вокруг?','Как вы находите смысл в обычных задачах?','Какое правило вы разрешили себе нарушить?','Что вы делаете, чтобы услышать своё мнение?','Как вы выбираете между пользой и интересом?','Какой привычкой вы особенно дорожите?','Как вы восстанавливаетесь после напряжённого дня?','Что в работе делает вас счастливее?','Как вы защищаете время для близких?','Как понять, что цель навязана не вами?','Какой вопрос вы советуете чаще задавать себе?']}
     ];
     const allCards=themes.flatMap((theme,themeIndex)=>theme.questions.map((text,index)=>({theme:theme.name,text,number:themeIndex*20+index+1})));
-    const emptyState={stage:0,maxStage:0,interest:'',preInterest:0,preQuestion:0,previousExperience:'',question:'',questionSubmissionId:'',dialogueMode:'',followUp:'',reaction:'',reflection:'',action:'',postReadiness:0,usefulStage:'',dropStage:'',startedAt:'',completedAt:''};
+    const emptyState={stage:0,maxStage:0,interest:'',preInterest:0,preQuestion:0,previousExperience:'',question:'',questionReason:'',questionRules:false,questionSubmissionId:'',questionStatus:'',dialogueMode:'',followUp:'',reaction:'',reflection:'',action:'',postReadiness:0,usefulStage:'',dropStage:'',startedAt:'',completedAt:''};
     let storedState={};
     try{storedState=JSON.parse(localStorage.getItem('leaderGameSession')||'{}')}catch{localStorage.removeItem('leaderGameSession')}
     let state={...emptyState,...storedState};
@@ -235,13 +236,14 @@
     function newSubmissionId(){return crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`}
     function updateButtons(){
       $('#toQuestion').disabled=!(state.interest&&state.preInterest&&state.preQuestion&&state.previousExperience);
-      $('#saveQuestion').disabled=$('#questionInput').value.trim().length<12;
+      $('#saveQuestion').disabled=$('#questionInput').value.trim().length<12||$('#questionReason').value.trim().length<8||!$('#questionRules').checked;
       $('#toReflection').disabled=!(state.dialogueMode&&state.followUp);
       $('#toAction').disabled=!(state.reaction&&$('#reflectionInput').value.trim().length>=8);
       $('#finishButton').disabled=!((state.action||$('#actionInput').value.trim().length>=8)&&state.postReadiness&&state.usefulStage&&state.dropStage);
     }
     function drawCard(){const pool=state.interest==='Пока не знаю'?allCards:allCards.filter(card=>card.theme===state.interest);let next=pool[Math.floor(Math.random()*pool.length)];if(pool.length>1)while(next===currentCard)next=pool[Math.floor(Math.random()*pool.length)];currentCard=next;$('#cardTheme').textContent=next.theme;$('#cardNumber').textContent=`Карта ${String(next.number).padStart(3,'0')} / 100`;$('#cardText').textContent=next.text}
     function questionFeedback(text){const hint=$('#questionHint');hint.className='hint';if(text.trim().length<12){hint.textContent='Добавь конкретики: о каком выборе, случае или опыте ты хочешь узнать?';return}if(/^(вы|вам|у вас|можно ли|есть ли|считаете ли)/i.test(text.trim())){hint.classList.add('warn');hint.textContent='Попробуй начать с «как», «почему» или «что помогло», чтобы получить развёрнутый ответ.';return}hint.classList.add('good');hint.textContent='Хорошая основа: вопрос приглашает поделиться опытом, а не ответить «да» или «нет».'}
+    function updateQuestionDraft(){const question=$('#questionInput').value.trim();$('#questionPreview').textContent=question||'Здесь появится твой вопрос.';questionFeedback(question);updateButtons()}
     function resetTimer(){clearInterval(timerId);timerId=null;timerSeconds=90;$('#timer').textContent='01:30';$('#timerButton').textContent='Запустить 90 секунд'}
     function startTimer(){if(timerId){resetTimer();return}$('#timerButton').textContent='Остановить';timerId=setInterval(()=>{timerSeconds--;$('#timer').textContent=`${String(Math.floor(timerSeconds/60)).padStart(2,'0')}:${String(timerSeconds%60).padStart(2,'0')}`;if(timerSeconds<=0){resetTimer();showToast('Тренировка завершена') }},1000)}
 
@@ -251,19 +253,20 @@
     $$('#experienceChoices .chip').forEach(button=>button.addEventListener('click',()=>{state.previousExperience=button.textContent.trim();$$('#experienceChoices .chip').forEach(item=>item.classList.toggle('selected',item===button));updateButtons();save()}));
     $('#toQuestion').addEventListener('click',()=>{drawCard();go(2)});
     $('#drawButton').addEventListener('click',drawCard);
-    $('#useCard').addEventListener('click',()=>{$('#questionInput').value=currentCard.text;questionFeedback(currentCard.text);updateButtons()});
-    $('#questionInput').addEventListener('input',event=>{questionFeedback(event.target.value);updateButtons()});
+    $('#useCard').addEventListener('click',()=>{$('#questionInput').value=currentCard.text;updateQuestionDraft()});
+    $('#questionInput').addEventListener('input',updateQuestionDraft);$('#questionReason').addEventListener('input',updateButtons);$('#questionRules').addEventListener('change',updateButtons);
     $('#saveQuestion').addEventListener('click',async()=>{
       const button=$('#saveQuestion');
       const question=$('#questionInput').value.trim();
+      const reason=$('#questionReason').value.trim();
       button.disabled=true;button.textContent='Отправляю…';
       const apiBase=location.protocol==='file:'?'http://localhost:3000':'';
       try{
         state.questionSubmissionId=state.questionSubmissionId||newSubmissionId();save();
-        const response=await fetch(`${apiBase}/api/questions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({submissionId:state.questionSubmissionId,question,interest:state.interest})});
+        const response=await fetch(`${apiBase}/api/questions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({submissionId:state.questionSubmissionId,question,reason,interest:state.interest,displayMode:'anonymous',rulesAccepted:true})});
         const result=await response.json();
         if(!response.ok)throw new Error(result.error||'Не удалось отправить вопрос.');
-        state.question=question;$('#dialogueQuestion').textContent=question;$('#bankCount').textContent='1';$('#bankPreview').textContent=question;showToast(result.deliveryStatus==='delivered'?'Вопрос сохранён и передан команде':'Вопрос сохранён и ждёт доставки');go(3);
+        state.question=question;state.questionReason=reason;state.questionRules=true;state.questionStatus=result.moderationStatus||'pending';$('#dialogueQuestion').textContent=question;$('#bankCount').textContent='1';$('#bankPreview').textContent=question;showToast(result.deliveryStatus==='delivered'?'Вопрос сохранён и передан команде':'Вопрос сохранён и ждёт доставки');go(3);
       }catch(error){showToast(error.message||'Нет связи с платформой');button.disabled=false}
       finally{button.textContent='Отправить ведущему →'}
     });
@@ -285,7 +288,7 @@
     const proposalOverlay=$('#proposalOverlay');const openProposal=()=>proposalOverlay.classList.add('open');const closeProposal=()=>proposalOverlay.classList.remove('open');
     ['#proposalButton','#heroProposalButton','#cardProposalButton','#meetingProposalButton'].forEach(id=>$(id).addEventListener('click',openProposal));$('#closeProposal').addEventListener('click',closeProposal);proposalOverlay.addEventListener('click',event=>{if(event.target===proposalOverlay)closeProposal()});
     ['#meetingQuestionButton','#collectionStartButton'].forEach(id=>$(id).addEventListener('click',()=>{state.startedAt=state.startedAt||new Date().toISOString();go(1)}));
-    $$('[data-prefill]').forEach(button=>button.addEventListener('click',()=>{state.startedAt=state.startedAt||new Date().toISOString();state.maxStage=Math.max(state.maxStage,2);$('#questionInput').value=button.dataset.prefill;questionFeedback(button.dataset.prefill);go(2);updateButtons()}));
+    $$('[data-prefill]').forEach(button=>button.addEventListener('click',()=>{state.startedAt=state.startedAt||new Date().toISOString();state.maxStage=Math.max(state.maxStage,2);$('#questionInput').value=button.dataset.prefill;go(2);updateQuestionDraft()}));
     document.addEventListener('keydown',event=>{if(event.key==='Escape')closeProposal()});
     $('#leaderForm').addEventListener('submit',async event=>{
       event.preventDefault();const button=$('#submitLeader');const data=Object.fromEntries(new FormData(event.currentTarget));button.disabled=true;button.textContent='Отправляю…';
@@ -307,7 +310,7 @@
       selectGroup('#interestChoices','.choice',state.interest);selectGroup('#dialogueMode','.choice',state.dialogueMode);selectGroup('#reactions','.reaction',state.reaction);selectGroup('#actionChoices','.action-card',state.action);
       const restoreChip=(id,value)=>$$(`${id} .chip`).forEach(button=>button.classList.toggle('selected',button.textContent.trim()===value));
       restoreChip('#experienceChoices',state.previousExperience);restoreChip('#followUps',state.followUp);restoreChip('#usefulChoices',state.usefulStage);restoreChip('#dropChoices',state.dropStage);
-      $('#questionInput').value=state.question;$('#reflectionInput').value=state.reflection;$('#actionInput').value=state.action;
+      $('#questionInput').value=state.question;$('#questionReason').value=state.questionReason;$('#questionRules').checked=state.questionRules;$('#reflectionInput').value=state.reflection;$('#actionInput').value=state.action;updateQuestionDraft();
       if(state.question){$('#dialogueQuestion').textContent=state.question;$('#bankCount').textContent='1';$('#bankPreview').textContent=state.question}
       if(state.interest)drawCard();
       if(state.stage===6){$('#sumInterest').textContent=state.interest;$('#sumQuestion').textContent=state.question;$('#sumAction').textContent=state.action}
